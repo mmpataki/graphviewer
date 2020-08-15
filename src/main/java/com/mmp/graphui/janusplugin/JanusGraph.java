@@ -37,4 +37,9 @@ public class JanusGraph implements Graph {
     public Map<String, List<Edge>> outE(String ...ids) throws Exception {
         return null;
     }
+
+    @Override
+    public Map<String, List<Vertex>> out(String... ids) throws Exception {
+        return null;
+    }
 }

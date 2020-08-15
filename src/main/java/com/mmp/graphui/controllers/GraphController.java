@@ -23,9 +23,14 @@ public class GraphController {
         return DAO.get(gId).v(ids);
     }
 
-    @RequestMapping(value = "/graph/{vid}/outE", method = RequestMethod.GET)
+    @RequestMapping(value = "/graph/outE", method = RequestMethod.GET)
     public Map<String, List<Edge>> outE(String gId, String ...ids) throws Exception {
         return DAO.get(gId).outE(ids);
+    }
+
+    @RequestMapping(value = "/graph/out", method = RequestMethod.GET)
+    public Map<String, List<Vertex>> out(String gId, String ...ids) throws Exception {
+        return DAO.get(gId).out(ids);
     }
 
 }

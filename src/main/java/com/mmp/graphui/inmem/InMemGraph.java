@@ -172,4 +172,25 @@ public class InMemGraph implements Graph {
         }
         return retMap;
     }
+
+    @Override
+    public Map<String, List<Vertex>> out(String... ids) throws Exception {
+        Map<String, List<Vertex>> retVerts = new HashMap<>();
+        for (String id : ids) {
+            List<Vertex> adjVerts = new LinkedList<>();
+            retVerts.put(id, adjVerts);
+            edges.get(id).forEach(adjVert -> adjVerts.add(new Vertex() {
+                @Override
+                public String getId() {
+                    return adjVert;
+                }
+
+                @Override
+                public Map<String, List<String>> getProperties() {
+                    return vertices.get(adjVert);
+                }
+            }));
+        }
+        return retVerts;
+    }
 }
