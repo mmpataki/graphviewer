@@ -55,7 +55,7 @@
 		}
 
 		.addQueryItem {
-			width: 80%;
+			
 		}
 
 		.propsTable {
@@ -67,8 +67,7 @@
 		}
 
 	</style>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-	<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.js"></script>
+	<script src="./vis-network.js"></script>
 	<script src="./script.js"></script>
 </head>
 
@@ -89,6 +88,8 @@
 				<div id="queryBox" style="clear: none;">
 				</div>
 				<button class="addQueryItem" onclick="addQueryItemForm()">+ (Add query parameters)</button>
+				<button id="fetchInEdgeBtn" onclick="fetchInEdges()">Fetch In Edges</button>
+				<button id="fetchOutEdgeBtn" onclick="fetchOutEdges()">Fetch Out Edges</button>
 			</center>
 		</div>
 		<div class="contentPanel">

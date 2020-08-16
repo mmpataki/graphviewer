@@ -20,9 +20,5 @@ public interface Graph {
     /* search the vertices */
     List<Vertex> v(Map<String, List<Object>> props) throws Exception;
 
-    /* get the outgoing edges */
-    List<Edge> outE(String ...ids) throws Exception;
-
-    /* get outgoing vertices */
-    Map<String, List<Vertex>> out(String ...ids) throws Exception;
+    List<Edge> e(String[] ids, TraverseDirection dir) throws Exception;
 }

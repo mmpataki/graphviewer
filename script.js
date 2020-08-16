@@ -2,6 +2,8 @@ var nodeSet, edgeSet;
 var nw;
 var qObj;
 var baseUrl = location.protocol == "file:" ? "http://localhost:8080" : "";
+var graphProps = {};
+var selectedVert;
 
 /* graph descriptor, TODO: cache this */
 var GD;
@@ -29,12 +31,29 @@ window.onload = function () {
 	edgeSet = new vis.DataSet([]);
 	options = {
 		physics: {
-			enabled: true
+			enabled: true,
+			hierarchicalRepulsion: {
+				nodeDistance: 400
+			}
 		}
 	};
 	nw = new vis.Network(g("graphPanel"), { nodes: nodeSet, edges: edgeSet }, options);
 	nw.on("select", vertSelected);
 	nw.on("doubleClick", console.log);
+}
+function enableEdgeFetcher() {
+	g("fetchOutEdgeBtn").disabled = false;
+	g("fetchInEdgeBtn").disabled = false;
+}
+function disableEdgeFetcher() {
+	g("fetchOutEdgeBtn").disabled = true;
+	g("fetchInEdgeBtn").disabled = true;
+}
+function fetchOutEdges() {
+	fetchEdgesOf([selectedVert["id"]], "OUT");
+}
+function fetchInEdges() {
+	fetchEdgesOf([selectedVert["id"]], "IN");
 }
 function vertSelected(params) {
 	var props;
@@ -43,14 +62,17 @@ function vertSelected(params) {
 	if (params["nodes"].length > 0) {
 		node = nodeSet.get(params["nodes"][0])
 		props = node.props;
+		selectedVert = node;
+		enableEdgeFetcher(node);
 	} else {
 		props = edgeSet.get(params["edges"][0]).props;
+		disableEdgeFetcher();
 	}
 	if (props && props.length == 0)
 		return;
 	if (!props) {
 		/* fetch all the properties of the vertex */
-		searchInternal({ id: [params["nodes"][0]] },function(verts) {
+		searchInternal({ id: [params["nodes"][0]] }, function (verts) {
 			var vert = verts[0];
 			node.color = getVColor(vert)
 			nodeSet.updateOnly(node)
@@ -76,12 +98,11 @@ function clearNw() {
 	edgeSet.clear();
 }
 function connect() {
-	var cData = {};
 	t("connString").split(";").forEach(kvp => {
 		kvp = kvp.split("=");
-		cData[kvp[0]] = kvp[1]
+		graphProps[kvp[0]] = kvp[1]
 	});
-	post(baseUrl + "/graph/open", cData, function (data) {
+	post(baseUrl + "/graph/open", graphProps, function (data) {
 		GD = data;
 		g("isConnected").style.color = "lawngreen";
 		g("isConnected").title = "Connected";
@@ -97,8 +118,8 @@ function searchInternal(q, callBack) {
 		callBack(JSON.parse(data));
 	})
 }
-function fetchEdgesOf(vids) {
-	var query = `${baseUrl}/graph/outE?gId=${GD}`;
+function fetchEdgesOf(vids, dir) {
+	var query = `${baseUrl}/graph/edges?gId=${GD}&dir=${dir}`;
 	vids.forEach(v => { query += `&id=${encodeURIComponent(v)}` });
 	get(`${query}`, "", function (data) {
 		console.log(data)
@@ -107,10 +128,12 @@ function fetchEdgesOf(vids) {
 }
 function processEdgeResponse(edges) {
 	edges.forEach(e => {
-		if (nodeSet.get(e["to"]) == undefined) {
+		var toNonNull;
+		if (!(toNonNull = nodeSet.get(e["to"])) || !nodeSet.get(e["from"])) {
+			var propName = toNonNull ? "from" : "to";
 			addV({
-				id: e["to"],
-				label: e["to"],
+				id: e[propName],
+				label: e[propName],
 				color: "lightgray"
 			})
 		}
@@ -119,7 +142,13 @@ function processEdgeResponse(edges) {
 			from: e["from"],
 			to: e["to"],
 			props: e["properties"],
-			label: getELabel(e)
+			label: getELabel(e),
+			arrows: {
+				to: {
+					enabled: true,
+					type: 'arrow'
+				}
+			}
 		})
 	})
 }
@@ -137,7 +166,8 @@ function processVertSearchResponse(verts) {
 			color: getVColor(v)
 		});
 	})
-	fetchEdgesOf(fetchEdge);
+	if (!graphProps.saveNet || graphProps.saveNet == "false")
+		fetchEdgesOf(fetchEdge, "BOTH");
 }
 function getVColor(v) {
 	var colors = {

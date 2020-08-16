@@ -2,6 +2,7 @@ package com.mmp.graphui.janusplugin;
 
 import com.mmp.graphui.graph.Edge;
 import com.mmp.graphui.graph.Graph;
+import com.mmp.graphui.graph.TraverseDirection;
 import com.mmp.graphui.graph.Vertex;
 
 import java.util.List;
@@ -34,12 +35,8 @@ public class JanusGraph implements Graph {
     }
 
     @Override
-    public List<Edge> outE(String ...ids) throws Exception {
+    public List<Edge> e(String[] ids, TraverseDirection dir) throws Exception {
         return null;
     }
 
-    @Override
-    public Map<String, List<Vertex>> out(String... ids) throws Exception {
-        return null;
-    }
 }

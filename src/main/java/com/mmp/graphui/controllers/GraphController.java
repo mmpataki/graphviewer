@@ -1,6 +1,7 @@
 package com.mmp.graphui.controllers;
 
 import com.mmp.graphui.graph.Edge;
+import com.mmp.graphui.graph.TraverseDirection;
 import com.mmp.graphui.graph.Vertex;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,14 +24,9 @@ public class GraphController {
         return DAO.get(gId).v(ids);
     }
 
-    @RequestMapping(value = "/graph/outE", method = RequestMethod.GET)
-    public List<Edge> outE(String gId, String ...id) throws Exception {
-        return DAO.get(gId).outE(id);
-    }
-
-    @RequestMapping(value = "/graph/out", method = RequestMethod.GET)
-    public Map<String, List<Vertex>> out(String gId, String ...id) throws Exception {
-        return DAO.get(gId).out(id);
+    @RequestMapping(value = "/graph/edges", method = RequestMethod.GET)
+    public List<Edge> e(String gId, TraverseDirection dir, String ...id) throws Exception {
+        return DAO.get(gId).e(id, dir);
     }
 
     @RequestMapping(value = "/graph/searchv", method = RequestMethod.POST)

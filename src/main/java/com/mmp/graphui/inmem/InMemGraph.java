@@ -2,6 +2,7 @@ package com.mmp.graphui.inmem;
 
 import com.mmp.graphui.graph.Edge;
 import com.mmp.graphui.graph.Graph;
+import com.mmp.graphui.graph.TraverseDirection;
 import com.mmp.graphui.graph.Vertex;
 
 import java.io.BufferedReader;
@@ -17,7 +18,8 @@ public class InMemGraph implements Graph {
 
     String id;
     Map<String, Map<String, List<String>>> vertices = new HashMap<>();
-    Map<String, List<String>> edges = new HashMap<>();
+    Map<String, List<String>> outEdges = new HashMap<>();
+    Map<String, List<String>> inEdges = new HashMap<>();
     Map<String, Map<String, List<String>>> edgeProps = new HashMap<>();
     /* vertex index on properties */
     Map<String, Map<Object, Set<String>>> vPropIndex = new HashMap<>();
@@ -62,10 +64,14 @@ public class InMemGraph implements Graph {
                 }
             }
         }
-        if (!edges.containsKey(from)) {
-            edges.put(from, new ArrayList<>());
+        if (!outEdges.containsKey(from)) {
+            outEdges.put(from, new ArrayList<>());
         }
-        edges.get(from).add(to);
+        if(!inEdges.containsKey(to)) {
+            inEdges.put(to, new ArrayList<>());
+        }
+        outEdges.get(from).add(to);
+        inEdges.get(to).add(from);
         edgeProps.put(from + "=>" + to, eprops);
     }
 
@@ -181,49 +187,38 @@ public class InMemGraph implements Graph {
     }
 
     @Override
-    public List<Edge> outE(String... ids) throws Exception {
+    public List<Edge> e(String[] ids, TraverseDirection dir) throws Exception {
         List<Edge> retVal = new LinkedList<>();
         for (String v : ids) {
-            if (!edges.containsKey(v))
+            if (!outEdges.containsKey(v))
                 continue;
-            retVal.addAll(edges.get(v).stream().map(id -> new Edge() {
-                @Override
-                public String getFrom() {
-                    return v;
-                }
-
-                @Override
-                public String getTo() {
-                    return id;
-                }
-
-                @Override
-                public Map<String, List<String>> getProperties() {
-                    return edgeProps.get(v + "=>" + id);
-                }
-            }).collect(Collectors.toList()));
+            if(dir == TraverseDirection.BOTH || dir == TraverseDirection.OUT)
+                retVal.addAll(getEdges(v, outEdges, TraverseDirection.OUT));
+            if(dir == TraverseDirection.BOTH || dir == TraverseDirection.IN)
+                retVal.addAll(getEdges(v, inEdges, TraverseDirection.IN));
         }
         return retVal;
     }
 
-    @Override
-    public Map<String, List<Vertex>> out(String... ids) throws Exception {
-        Map<String, List<Vertex>> retVerts = new HashMap<>();
-        for (String id : ids) {
-            List<Vertex> adjVerts = new LinkedList<>();
-            retVerts.put(id, adjVerts);
-            edges.get(id).forEach(adjVert -> adjVerts.add(new Vertex() {
-                @Override
-                public String getId() {
-                    return adjVert;
-                }
+    private List<Edge> getEdges(String v, Map<String, List<String>> _edges, TraverseDirection hint) {
+        if(!_edges.containsKey(v))
+            return Collections.EMPTY_LIST;
+        return _edges.get(v).stream().map(id -> new Edge() {
+            @Override
+            public String getFrom() {
+                return hint == TraverseDirection.OUT ? v : id;
+            }
 
-                @Override
-                public Map<String, List<String>> getProperties() {
-                    return vertices.get(adjVert);
-                }
-            }));
-        }
-        return retVerts;
+            @Override
+            public String getTo() {
+                return hint == TraverseDirection.OUT ? id : v;
+            }
+
+            @Override
+            public Map<String, List<String>> getProperties() {
+                String edgeID = hint == TraverseDirection.OUT ? v + "=>" + id : id + "=>" + v;
+                return edgeProps.get(edgeID);
+            }
+        }).collect(Collectors.toList());
     }
 }
