@@ -19,6 +19,8 @@ public class InMemGraph implements Graph {
     Map<String, Map<String, List<String>>> vertices = new HashMap<>();
     Map<String, List<String>> edges = new HashMap<>();
     Map<String, Map<String, List<String>>> edgeProps = new HashMap<>();
+    /* vertex index on properties */
+    Map<String, Map<Object, Set<String>>> vPropIndex = new HashMap<>();
 
     @Override
     public String getId() {
@@ -31,18 +33,10 @@ public class InMemGraph implements Graph {
         String line;
         String reading = "verts";
         while ((line = br.readLine()) != null) {
-            if (line.contains("#vertices"))
-                reading = "verts";
-            else if (line.contains("#edges"))
-                reading = "edges";
-            else {
-                switch (reading) {
-                    case "verts":
-                        processVert(line);
-                    case "edges":
-                        processEdge(line);
-                }
-            }
+            if (line.startsWith("*"))
+                processVert(line.substring(2));
+            else if (line.startsWith("-"))
+                processEdge(line.substring(2));
         }
         id = "graph-" + System.currentTimeMillis();
         return id;
@@ -53,7 +47,7 @@ public class InMemGraph implements Graph {
         Map<String, List<String>> eprops = new HashMap<>();
         for (String chunk : line.split(",")) {
             if (chunk.contains("=")) {
-                String kvp[] = chunk.split("=");
+                String[] kvp = chunk.split("=");
                 String key = kvp[0];
                 String val = kvp[1];
                 if (key.equals("from")) {
@@ -92,6 +86,19 @@ public class InMemGraph implements Graph {
             vprops.get(key).add(val);
         }
         vertices.put(id, vprops);
+        for (Map.Entry<String, List<String>> kvp : vprops.entrySet()) {
+            if (!vPropIndex.containsKey(kvp.getKey())) {
+                vPropIndex.put(kvp.getKey(), new HashMap<>());
+            }
+            Map<Object, Set<String>> vals2VertexIds = vPropIndex.get(kvp.getKey());
+
+            for (String value : kvp.getValue()) {
+                if (!vals2VertexIds.containsKey(value)) {
+                    vals2VertexIds.put(value, new HashSet<>());
+                }
+                vals2VertexIds.get(value).add(id);
+            }
+        }
     }
 
     @Override
@@ -99,7 +106,7 @@ public class InMemGraph implements Graph {
 
         Stream<Map<String, List<String>>> mapStream =
                 ids != null ?
-                        Arrays.stream(ids).map(id -> vertices.get(id)).filter(vprops -> vprops != null) :
+                        Arrays.stream(ids).map(id -> vertices.get(id)).filter(Objects::nonNull) :
                         vertices.values().stream();
         return mapStream.map(vprops -> new Vertex() {
             @Override
@@ -141,19 +148,45 @@ public class InMemGraph implements Graph {
     }
 
     @Override
-    public List<Vertex> v(Map<String, Object> props) {
-        return new ArrayList<>();
+    public List<Vertex> v(Map<String, List<Object>> props) {
+        Set<String> rSet = null;
+        for (Map.Entry<String, List<Object>> prop : props.entrySet()) {
+            if (!vPropIndex.containsKey(prop.getKey()))
+                continue;
+            Map<Object, Set<String>> val2VidMap = vPropIndex.get(prop.getKey());
+            Set<String> vSet = new HashSet<>();
+            for (Object val : prop.getValue()) {
+                if (!val2VidMap.containsKey(val))
+                    continue;
+                Set<String> cur = val2VidMap.get(val);
+                vSet.addAll(cur);
+            }
+            if (rSet == null) {
+                rSet = vSet;
+            } else {
+                rSet.retainAll(vSet);
+            }
+        }
+        return rSet.stream().map(id -> new Vertex() {
+            @Override
+            public String getId() {
+                return id;
+            }
+
+            @Override
+            public Map<String, List<String>> getProperties() {
+                return vertices.get(id);
+            }
+        }).collect(Collectors.toList());
     }
 
     @Override
-    public Map<String, List<Edge>> outE(String... ids) throws Exception {
-        Map<String, List<Edge>> retMap = new HashMap<>();
+    public List<Edge> outE(String... ids) throws Exception {
+        List<Edge> retVal = new LinkedList<>();
         for (String v : ids) {
-            if (!edges.containsKey(v)) {
-                retMap.put(v, Collections.EMPTY_LIST);
+            if (!edges.containsKey(v))
                 continue;
-            }
-            retMap.put(v, edges.get(v).stream().map(id -> new Edge() {
+            retVal.addAll(edges.get(v).stream().map(id -> new Edge() {
                 @Override
                 public String getFrom() {
                     return v;
@@ -170,7 +203,7 @@ public class InMemGraph implements Graph {
                 }
             }).collect(Collectors.toList()));
         }
-        return retMap;
+        return retVal;
     }
 
     @Override

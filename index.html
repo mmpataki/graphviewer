@@ -1,0 +1,101 @@
+<html>
+
+<head>
+	<style>
+		* {
+			padding: 0;
+			margin: 0;
+		}
+
+		.connPanel {
+			clear: both;
+			width: 100%;
+			height: 5%;
+		}
+
+		.queryPanel {
+			clear: both;
+			width: 100%;
+			height: 20%;
+			overflow: auto;
+		}
+
+		.contentPanel {
+			clear: both;
+			width: 100%;
+			height: 75%;
+		}
+
+		.graphPanel {
+			width: 80%;
+			height: 100%;
+			float: left;
+		}
+
+		.propsPanel {
+			width: 20%;
+			height: 100%;
+			float: left;
+		}
+
+		#connString {
+			width: 90%;
+		}
+
+		.queryKey {
+			width: 40%;
+		}
+
+		.queryVal {
+			width: 40%;
+		}
+
+		#searchQuery {
+			width: 80%;
+		}
+
+		.addQueryItem {
+			width: 80%;
+		}
+
+		.propsTable {
+			width: 100%;
+		}
+
+		.propHeader {
+			text-align: left;
+		}
+
+	</style>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.js"></script>
+	<script src="./script.js"></script>
+</head>
+
+<body>
+	<div>
+		<div class="connPanel">
+			<center>
+				<span id="isConnected" style="color: red;" title="Disconnected">&#11044;</span>
+				<input id="connString" />
+				<button onclick="connect()">Connect</button>
+			</center>
+		</div>
+		<div class="queryPanel">
+			<center>
+				<input id="searchQuery" placeholder="query" disabled />
+				<button id="searchBtn" onclick="search()">Search</button>
+				<button id="clearBtn" onclick="clearNw()">Clear</button>
+				<div id="queryBox" style="clear: none;">
+				</div>
+				<button class="addQueryItem" onclick="addQueryItemForm()">+ (Add query parameters)</button>
+			</center>
+		</div>
+		<div class="contentPanel">
+			<div class="graphPanel" id="graphPanel"></div>
+			<div class="propsPanel" id="propsPanel"></div>
+		</div>
+	</div>
+</body>
+
+</html>

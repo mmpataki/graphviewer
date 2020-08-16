@@ -18,10 +18,10 @@ public interface Graph {
     List<Edge> e(String ...edges) throws Exception;
 
     /* search the vertices */
-    List<Vertex> v(Map<String, Object> props) throws Exception;
+    List<Vertex> v(Map<String, List<Object>> props) throws Exception;
 
     /* get the outgoing edges */
-    Map<String, List<Edge>> outE(String ...ids) throws Exception;
+    List<Edge> outE(String ...ids) throws Exception;
 
     /* get outgoing vertices */
     Map<String, List<Vertex>> out(String ...ids) throws Exception;

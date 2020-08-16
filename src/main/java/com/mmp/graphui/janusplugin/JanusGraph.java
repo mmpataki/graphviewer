@@ -29,12 +29,12 @@ public class JanusGraph implements Graph {
     }
 
     @Override
-    public List<Vertex> v(Map<String, Object> props) {
+    public List<Vertex> v(Map<String, List<Object>> props) {
         return null;
     }
 
     @Override
-    public Map<String, List<Edge>> outE(String ...ids) throws Exception {
+    public List<Edge> outE(String ...ids) throws Exception {
         return null;
     }
 
