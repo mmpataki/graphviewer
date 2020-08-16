@@ -65,7 +65,9 @@ function vertSelected(params) {
 		selectedVert = node;
 		enableEdgeFetcher(node);
 	} else {
-		props = edgeSet.get(params["edges"][0]).props;
+		var edge = edgeSet.get(params["edges"][0])
+		props = edge.props;
+		props["id"] = edge.id
 		disableEdgeFetcher();
 	}
 	if (props && props.length == 0)
@@ -75,6 +77,7 @@ function vertSelected(params) {
 		searchInternal({ id: [params["nodes"][0]] }, function (verts) {
 			var vert = verts[0];
 			node.color = getVColor(vert)
+			node.label = getVLabel(vert);
 			nodeSet.updateOnly(node)
 			showProps(vert["properties"]);
 			processVertSearchResponse(verts);
@@ -177,10 +180,30 @@ function getVColor(v) {
 	return colors[v["properties"]["country"]]
 }
 function getVLabel(v) {
-	return v["id"];
+	try {
+		var keys = graphProps.vertLabelPropNames.split(",");
+		for (let index = 0; index < keys.length; index++) {
+			const key = keys[index];
+			if (v["properties"][key]) {
+				return v["properties"][key][0];
+			}
+		}
+	} catch (err) {
+		return v["id"];
+	}
 }
 function getELabel(e) {
-	return e["properties"]["rel"][0];
+	try {
+		var keys = graphProps.edgeLabelPropNames.split(",");
+		for (let index = 0; index < keys.length; index++) {
+			const key = keys[index];
+			if (e["properties"][key]) {
+				return e["properties"][key][0];
+			}
+		}
+	} catch(err) {
+		return "";
+	}
 }
 function addV(v) {
 	try {
