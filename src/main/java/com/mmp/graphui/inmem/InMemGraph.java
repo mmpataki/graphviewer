@@ -41,6 +41,7 @@ public class InMemGraph implements Graph {
                 processEdge(line.substring(2));
         }
         id = "graph-" + System.currentTimeMillis();
+        br.close();
         return id;
     }
 
